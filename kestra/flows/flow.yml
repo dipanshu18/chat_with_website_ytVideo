@@ -1,0 +1,55 @@
+id: build-aws-ecr-image-deploy
+namespace: chatapp
+
+tasks:
+  - id: file_system
+    type: io.kestra.plugin.core.flow.WorkingDirectory
+    tasks:
+      - id: clone_repository
+        type: io.kestra.plugin.git.Clone
+        url: https://github.com/dipanshu18/chat_with_website_ytVideo
+        branch: master
+
+      - id: create_secrets
+        type: io.kestra.plugin.scripts.shell.Commands
+        commands:
+          - "mkdir .streamlit"
+          - "touch .streamlit/secrets.toml"
+          - "echo [creds] >> .streamlit/secrets.toml"
+          - "echo GROQ_API_KEY='{{ kv('GROQ_API_KEY') }}' >> .streamlit/secrets.toml"
+          - "echo LANGCHAIN_TRACING_V2='{{ kv('LANGCHAIN_TRACING_V2') }}' >> .streamlit/secrets.toml"
+          - "echo LANGCHAIN_ENDPOINT='{{ kv('LANGCHAIN_ENDPOINT') }}' >> .streamlit/secrets.toml"
+          - "echo LANGCHAIN_API_KEY='{{ kv('LANGCHAIN_API_KEY') }}' >> .streamlit/secrets.toml"
+          - "echo LANGCHAIN_PROJECT='{{ kv('LANGCHAIN_PROJECT') }}' >> .streamlit/secrets.toml"
+          - "echo HUGGINGFACE_ACCESS_TOKEN='{{ kv('HUGGINGFACE_ACCESS_TOKEN') }}' >> .streamlit/secrets.toml"
+
+      - id: fetch_auth_token
+        type: io.kestra.plugin.aws.ecr.GetAuthToken
+        accessKeyId: "{{ kv('AWS_ACCESS_KEY') }}"
+        secretKeyId: "{{ kv('AWS_SECRET_KEY') }}"
+        region: "{{ kv('AWS_DEFAULT_REGION') }}"
+
+      - id: build
+        type: io.kestra.plugin.docker.Build
+        dockerfile: ./Dockerfile
+        tags:
+          - 782266695170.dkr.ecr.us-east-1.amazonaws.com/chatapp:latest
+        push: true
+        credentials:
+          username: AWS
+          password: "{{ outputs.fetch_auth_token.token }}"
+
+      - id: deploy
+        type: io.kestra.plugin.terraform.cli.TerraformCLI
+        beforeCommands:
+          - "terraform -chdir=infra/ init"
+        inputFiles:
+          terraform.tfvars: |
+            aws_access_key = "{{ kv('AWS_ACCESS_KEY') }}"
+            aws_secret_key = "{{ kv('AWS_SECRET_KEY') }}"
+        commands:
+          - terraform -chdir=infra/ apply -auto-approve
+        env:
+          AWS_ACCESS_KEY: "{{ kv('AWS_ACCESS_KEY') }}"
+          AWS_SECRET_KEY: "{{ kv('AWS_SECRET_KEY') }}"
+          AWS_DEFAULT_REGION: "{{ kv('AWS_DEFAULT_REGION') }}"
