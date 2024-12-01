@@ -3,3 +3,5 @@ venv/
 chroma_db/
 .streamlit/
 __pycache__/
+
+infra/.terraform*

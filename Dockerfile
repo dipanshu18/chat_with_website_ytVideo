@@ -1,7 +1,7 @@
 FROM python:3.10-slim
 WORKDIR /app
 COPY requirements.txt /app/
-RUN pip3 install -r requirements.txt
+RUN pip3 install --no-cache-dir -r requirements.txt
 COPY .streamlit/secrets.toml /app/.streamlit/
 COPY app.py /app/
 EXPOSE 8501
