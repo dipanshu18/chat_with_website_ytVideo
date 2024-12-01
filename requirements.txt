@@ -1,0 +1,11 @@
+streamlit
+langchain
+langchain_community
+langsmith
+langchain_groq
+langchain_core
+bs4
+Chroma
+langchain_chroma
+langchain-openai
+langchain_huggingface
