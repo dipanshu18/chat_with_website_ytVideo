@@ -9,3 +9,4 @@ Chroma
 langchain_chroma
 langchain-openai
 langchain_huggingface
+youtube_transcript_api
