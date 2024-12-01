@@ -5,3 +5,5 @@ chroma_db/
 __pycache__/
 
 infra/.terraform*
+infra/terraform*
+user_data.sh
