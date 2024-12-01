@@ -30,7 +30,7 @@ model = ChatGroq(temperature=0, groq_api_key=groq_api_key, model_name="llama3-8b
 parser = StrOutputParser()
 
 # Sidebar for navigation
-st.sidebar.title("🔍 Navigation")
+st.sidebar.title("Navigation")
 option = st.sidebar.radio(
     "Choose an action:", ["QnA with Website", "Chat with YouTube Video"]
 )
@@ -58,38 +58,38 @@ if option == "QnA with Website":
             )
 
             st.success("✅ Website content indexed successfully!")
-
-            user_question = st.text_input("🤔 Enter your question about the website:")
-
-            if user_question:
-                try:
-                    st.toast("Generating answer...", icon="📝")
-                    relevant_docs = db.similarity_search(user_question, k=3)
-                    context = "\n".join([doc.page_content for doc in relevant_docs])
-
-                    prompt = ChatPromptTemplate(
-                        [
-                            (
-                                "system",
-                                "You are a knowledgeable and precise assistant tasked with answering questions based on website content. "
-                                "Provide clear, concise, and accurate responses using only the given context. ",
-                            ),
-                            ("system", f"Context: {context}"),
-                            (
-                                "user",
-                                "Based on the above context, answer the following question: {question}",
-                            ),
-                        ]
-                    )
-
-                    chain = prompt | model | parser
-                    st.write("💡 Answer:")
-                    st.write_stream(chain.stream({"question": user_question}))
-
-                except Exception as e:
-                    st.error(f"❌ Failed to fetch the answer. Error: {e}")
         except Exception as e:
             st.error(f"❌ Failed to index the website. Error: {e}")
+
+        user_question = st.text_input("🤔 Enter your question about the website:")
+
+        if user_question:
+            try:
+                st.toast("Generating answer...", icon="📝")
+                relevant_docs = db.similarity_search(user_question, k=3)
+                context = "\n".join([doc.page_content for doc in relevant_docs])
+
+                prompt = ChatPromptTemplate(
+                    [
+                        (
+                            "system",
+                            "You are a knowledgeable and precise assistant tasked with answering questions based on website content. "
+                            "Provide clear, concise, and accurate responses using only the given context. ",
+                        ),
+                        ("system", f"Context: {context}"),
+                        (
+                            "user",
+                            "Based on the above context, answer the following question: {question}",
+                        ),
+                    ]
+                )
+
+                chain = prompt | model | parser
+                st.write("💡 Answer:")
+                st.write_stream(chain.stream({"question": user_question}))
+
+            except Exception as e:
+                st.error(f"❌ Failed to fetch the answer. Error: {e}")
 
 
 elif option == "Chat with YouTube Video":
